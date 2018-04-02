@@ -2,9 +2,11 @@
 
 import sqlite3
 from flask import Flask, g, jsonify, request
+
 app = Flask(__name__, static_url_path='', static_folder='.')
 
 DATABASE = 'database.db'
+
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -12,11 +14,13 @@ def get_db():
         db = g._database = sqlite3.connect(DATABASE)
     return db
 
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
 
 @app.route("/send_gps", methods=['POST'])
 def send_gps():
@@ -35,6 +39,7 @@ def send_gps():
     db.commit()
     return jsonify(json_res)
 
+
 @app.route("/get_gps", methods=['GET'])
 def get_gps():
     json_res = []
@@ -51,11 +56,13 @@ def get_gps():
         json_res.append(data)
     return jsonify(json_res)
 
+
 def query_db(query, args=(), one=False):
     cur = get_db().execute(query, args)
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
+
 
 def init_db():
     with app.app_context():

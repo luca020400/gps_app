@@ -43,7 +43,7 @@ def send_gps():
 @app.route("/get_gps", methods=['GET'])
 def get_gps():
     json_res = []
-    limit = int(request.args.get('limit', '100'))
+    limit = request.args.get('limit', '100')
     data = query_db('select * from gps_data limit ?', limit)
     for gps_data in data:
         data = {

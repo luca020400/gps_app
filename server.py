@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 
 import sqlite3
-from flask import Flask, g, jsonify, request
+from functools import wraps
+
+from flask import Flask, Response, g, jsonify, request
 
 app = Flask(__name__, static_url_path='', static_folder='.')
+app.config.from_pyfile('app.cfg')
+app.username = app.config['USERNAME']
+app.password = app.config['PASSWORD']
+
+if not app.username and not app.password:
+    raise Exception("You need to set the username and password!")
 
 DATABASE = 'database.db'
 
@@ -20,6 +28,31 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == app.username and password == app.password
+
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+        'Could not verify your access level for that URL.\n'
+        'You have to login with proper credentials', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.route("/send_gps", methods=['POST'])
@@ -41,6 +74,7 @@ def send_gps():
 
 
 @app.route("/get_gps", methods=['GET'])
+@requires_auth
 def get_gps():
     json_res = []
     limit = request.args.get('limit', '100')

@@ -5,7 +5,7 @@ from functools import wraps
 
 from flask import Flask, Response, g, jsonify, request
 
-app = Flask(__name__, static_url_path='', static_folder='.')
+app = Flask(__name__, static_url_path='', static_folder='./static')
 app.config.from_pyfile('app.cfg')
 app.username = app.config['USERNAME']
 app.password = app.config['PASSWORD']
